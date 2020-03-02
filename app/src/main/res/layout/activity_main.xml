@@ -9,26 +9,25 @@
 
     <TextView
         android:id="@+id/sensor_list"
-        android:layout_width="196dp"
-        android:layout_height="226dp"
+        android:layout_width="171dp"
+        android:layout_height="182dp"
         android:text="MY SENSORS"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_bias="0.033"
+        app:layout_constraintHorizontal_bias="0.941"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.699" />
+        app:layout_constraintVertical_bias="0.768" />
 
     <Button
         android:id="@+id/generate_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="132dp"
-        android:layout_marginBottom="16dp"
         android:text="Generate"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.921"
+        app:layout_constraintHorizontal_bias="0.961"
         app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
@@ -53,17 +52,16 @@
         android:id="@+id/share_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="12dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="8dp"
         android:text="Share"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/generate_button" />
 
     <EditText
         android:id="@+id/number_field"
-        android:layout_width="70dp"
-        android:layout_height="49dp"
-        android:layout_marginStart="232dp"
+        android:layout_width="71dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="216dp"
         android:ems="10"
         android:inputType="numberSigned"
         app:layout_constraintBottom_toTopOf="@+id/share_button"
@@ -80,7 +78,7 @@
         app:layout_constraintBottom_toTopOf="@+id/generate_button"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.85" />
+        app:layout_constraintVertical_bias="0.968" />
 
     <TextView
         android:id="@+id/checkedTextView"
@@ -125,6 +123,9 @@
             android:text="Fastest" />
     </RadioGroup>
 
+
+
+
     <TextView
         android:id="@+id/textView"
         android:layout_width="wrap_content"
@@ -135,8 +136,9 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <LinearLayout
-        android:layout_width="212dp"
-        android:layout_height="425dp"
+        android:id="@+id/linearLayout2"
+        android:layout_width="216dp"
+        android:layout_height="400dp"
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -156,16 +158,22 @@
             android:text="Uncalibrated Readings (Accel)\nX\nY:\n\Z:" />
 
         <TextView
-            android:id="@+id/ambient_light_readings"
+            android:id="@+id/magneto_readings_uncali"
             android:layout_width="match_parent"
             android:layout_height="67dp"
-            android:text="Ambient Light Readings\nX\nY:\n\Z:" />
+            android:text="Uncalibrated Readings (Mag)\nX\nY:\n\Z:" />
+
+        <TextView
+            android:id="@+id/light_readings"
+            android:layout_width="match_parent"
+            android:layout_height="67dp"
+            android:text="Light Readings\nX\nY:\n\Z:" />
 
     </LinearLayout>
 
     <LinearLayout
-        android:layout_width="217dp"
-        android:layout_height="427dp"
+        android:layout_width="216dp"
+        android:layout_height="400dp"
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -183,6 +191,66 @@
             android:layout_width="match_parent"
             android:layout_height="67dp"
             android:text="Calibrated Readings\nX\nY:\nZ:" />
+
+        <TextView
+            android:id="@+id/magneto_readings"
+            android:layout_width="match_parent"
+            android:layout_height="67dp"
+            android:text="Calibrated Readings\nX\nY:\n\Z:" />
     </LinearLayout>
+
+    <RadioGroup
+        android:id="@+id/sensorRadioGroup"
+        android:layout_width="150dp"
+        android:layout_height="88dp"
+        app:layout_constraintBottom_toTopOf="@+id/textView"
+        app:layout_constraintEnd_toStartOf="@+id/sensor_list"
+        app:layout_constraintHorizontal_bias="0.023"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <RadioButton
+            android:id="@+id/radioOptionGyro"
+            android:layout_width="match_parent"
+            android:layout_height="22dp"
+            android:text="Gyrometer" />
+
+        <RadioButton
+            android:id="@+id/radioOptionAccel"
+            android:layout_width="match_parent"
+            android:layout_height="22dp"
+            android:text="Accelerometer" />
+
+        <RadioButton
+            android:id="@+id/radioOptionMagneto"
+            android:layout_width="match_parent"
+            android:layout_height="22dp"
+            android:text="Magnetometer" />
+
+        <RadioButton
+            android:id="@+id/radioOptionLight"
+            android:layout_width="match_parent"
+            android:layout_height="22dp"
+            android:text="Light" />
+
+    </RadioGroup>
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Recorded Sensor"
+        app:layout_constraintBottom_toTopOf="@+id/sensorRadioGroup"
+        app:layout_constraintEnd_toStartOf="@+id/sensor_list"
+        app:layout_constraintHorizontal_bias="0.062"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="32dp"
+        android:text="List of Available Sensors"
+        app:layout_constraintBottom_toTopOf="@+id/sensor_list"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
