@@ -39,6 +39,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private boolean isRecordingAccel;
     private boolean isRecordingLight;
     private boolean isRecordingMagneto;
+    private boolean isRecordingAll;
 
     /* Used to Display Values */
     private TextView mTextGyroSensorUncali;
@@ -55,8 +56,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     /* Recording Sensor Data */
     private ArrayList<String> outputBuffer = new ArrayList<>();
+
+    private ArrayList<String> gyroBuffer = new ArrayList<>();
+    private ArrayList<String> accelBuffer = new ArrayList<>();
+    private ArrayList<String> magnetoBuffer = new ArrayList<>();
+    private ArrayList<String> lightBuffer = new ArrayList<>();
+
+
     private boolean isInUncaliRecordingMode = false;
     private boolean isInCaliRecordingMode = false;
+    private boolean hasLightSensor = true;
     int dataCollectionLimit;
     private EditText mEdit;
 
@@ -75,6 +84,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private RadioButton radioAccel;
     private RadioButton radioMagneto;
     private RadioButton radioLight;
+    private RadioButton radioAll;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -198,6 +208,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         radioAccel = findViewById(R.id.radioOptionAccel);
         radioMagneto = findViewById(R.id.radioOptionMagneto);
         radioLight = findViewById(R.id.radioOptionLight);
+        radioAll = findViewById(R.id.radioOptionAll);
 
     }
     private void setupSwitch() {
@@ -208,7 +219,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         generateButton = findViewById(R.id.generate_button);
         generateButton.setOnClickListener(new View.OnClickListener(){
             public void onClick(View v) { //Operates on Main Thread
+
+                /* Reset Buffers */
                 outputBuffer = new ArrayList<>();
+                gyroBuffer = new ArrayList<>();
+                gyroBuffer.add("--------------- GYRO VALUES ------------");
+                accelBuffer = new ArrayList<>();
+                accelBuffer.add("--------------- ACCEL VALUES ------------");
+                magnetoBuffer = new ArrayList<>();
+                magnetoBuffer.add("--------------- MAGNETO VALUES ------------");
+                lightBuffer = new ArrayList<>();
+                lightBuffer.add("--------------- LIGHT VALUES ------------");
+
+                /* Obtain New Data Collection Goal */
                 dataCollectionLimit = Integer.parseInt(mEdit.getText().toString());
 
                 /* Sensitivity Radio */
@@ -228,21 +251,31 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     isRecordingAccel = false;
                     isRecordingMagneto = false;
                     isRecordingLight = false;
+                    isRecordingAll = false;
                 } else if(radioAccel.isChecked()) {
                     isRecordingGyro = false;
                     isRecordingAccel = true;
                     isRecordingMagneto = false;
                     isRecordingLight = false;
+                    isRecordingAll = false;
                 } else if(radioMagneto.isChecked()) {
                     isRecordingGyro = false;
                     isRecordingAccel = false;
                     isRecordingMagneto = true;
                     isRecordingLight = false;
-                } else {
+                    isRecordingAll = false;
+                } else if(radioLight.isChecked()){
                     isRecordingGyro = false;
                     isRecordingAccel = false;
                     isRecordingMagneto = false;
                     isRecordingLight = true;
+                    isRecordingAll = false;
+                } else if(radioAll.isChecked()) {
+                    isRecordingGyro = false;
+                    isRecordingAccel = false;
+                    isRecordingMagneto = false;
+                    isRecordingLight = false;
+                    isRecordingAll = true;
                 }
 
                 if(collectCalibrated.isChecked()) {
@@ -260,6 +293,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         generateButton.setOnClickListener(new View.OnClickListener(){
             public void onClick(View v) { //Operates on Main Thread
 
+                isInUncaliRecordingMode = false;
+                isInCaliRecordingMode = false;
+
+                if(isRecordingAll) {
+                    outputBuffer.add(gyroBuffer.toString());
+                    outputBuffer.add(accelBuffer.toString());
+                    outputBuffer.add(magnetoBuffer.toString());
+                    outputBuffer.add(lightBuffer.toString());
+
+                }
                 Intent sendIntent = new Intent();
                 sendIntent.setAction(Intent.ACTION_SEND);
                 sendIntent.putExtra(Intent.EXTRA_TEXT, outputBuffer.toString().replaceAll(", ", "").replaceAll("\\[|\\]", ""));
@@ -301,7 +344,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if(mSensorLight != null & !mSensorLight.toString().toLowerCase().contains("ambient"))
             mSensorManager.registerListener(this, mSensorLight, SensorManager.SENSOR_DELAY_NORMAL);
 
-
+        if(mSensorLight.toString().toLowerCase().contains("ambient"))
+            hasLightSensor = false;
     }
 
     @Override
@@ -316,7 +360,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         String threeAxisData = "X: " + value1 + "\nY: " + value2 + "\nZ: " + value3;
         String threeAxisRecordingDataFormat = value1 + "\t" + value2 + "\t" + value3 + "\n";
         String oneAxisRecordingDataFormat = value1 + "\n";
-        sampleInfo.setText("No. Samples: " + outputBuffer.size());
+
+        if(!isRecordingAll)
+            sampleInfo.setText("No. Samples: " + outputBuffer.size());
+        else
+            sampleInfo.setText("No. Samples: " + (accelBuffer.size() + gyroBuffer.size() + lightBuffer.size() + magnetoBuffer.size()) +
+                                " [" + gyroBuffer.size() + "/" + accelBuffer.size() + "/" + magnetoBuffer.size() + "/" + lightBuffer.size() + "]");
+
 
         /* Handling Multiple Sensors */
         int sensorType = event.sensor.getType();
@@ -326,19 +376,27 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             case Sensor.TYPE_GYROSCOPE:
                 mTextGyroSensor.setText("Calibrated Gryo (rad/s):\n" + threeAxisData);
-                if(isRecordingGyro)
+
+                if(isRecordingAll)
+                    recordThreeAxisDataCalibrated(threeAxisRecordingDataFormat, gyroBuffer);
+                else if(isRecordingGyro)
                     recordThreeAxisDataCalibrated(threeAxisRecordingDataFormat);
                 break;
 
             case Sensor.TYPE_ACCELEROMETER:
                 mTextAccelSensor.setText("Calibrated Accel (m/s)^2:\n" + threeAxisData);
+
+                if(isRecordingAll)
+                    recordThreeAxisDataCalibrated(threeAxisRecordingDataFormat, accelBuffer);
                 if(isRecordingAccel)
                     recordThreeAxisDataCalibrated(threeAxisRecordingDataFormat);
                 break;
 
             case Sensor.TYPE_MAGNETIC_FIELD:
                 mTextMagneto.setText("Magneto Calibrated (μT):\n" + threeAxisData);
-                if(isRecordingMagneto)
+                if(isRecordingAll)
+                    recordThreeAxisDataCalibrated(threeAxisRecordingDataFormat, magnetoBuffer);
+                else if(isRecordingMagneto)
                     recordThreeAxisDataCalibrated(threeAxisRecordingDataFormat);
                 break;
 
@@ -346,19 +404,25 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             case Sensor.TYPE_GYROSCOPE_UNCALIBRATED:
                 mTextGyroSensorUncali.setText("Uncalibrated Gyro (rad/s):\n" + threeAxisData);
-                if(isRecordingGyro)
+                if(isRecordingAll)
+                    recordThreeAxisDataUncalibrated(threeAxisRecordingDataFormat, gyroBuffer);
+                else if(isRecordingGyro)
                     recordThreeAxisDataUncalibrated(threeAxisRecordingDataFormat);
                 break;
 
             case Sensor.TYPE_ACCELEROMETER_UNCALIBRATED:
                 mTextAccelSensorUncali.setText("Uncalibrated Accel (m/s)^2:\n" + threeAxisData);
-                if(isRecordingAccel)
+                if(isRecordingAll)
+                    recordThreeAxisDataUncalibrated(threeAxisRecordingDataFormat, accelBuffer);
+                else if(isRecordingAccel)
                     recordThreeAxisDataUncalibrated(threeAxisRecordingDataFormat);
                 break;
 
             case Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED:
                 mTextMagnetoUncali.setText("Magneto Uncalibrated (μT):\n" + threeAxisData);
-                if(isRecordingMagneto)
+                if(isRecordingAll)
+                    recordThreeAxisDataUncalibrated(threeAxisRecordingDataFormat, magnetoBuffer);
+                else if(isRecordingMagneto)
                     recordThreeAxisDataUncalibrated(threeAxisRecordingDataFormat);
                 break;
 
@@ -366,7 +430,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             case Sensor.TYPE_LIGHT:
                 mTextAmbientLight.setText("Light Sensor (lx):\n" + value1);
-                if(isRecordingLight)
+                if(isRecordingAll)
+                    recordOneAxisData(oneAxisRecordingDataFormat, lightBuffer);
+                else if(isRecordingLight)
                     recordOneAxisData(oneAxisRecordingDataFormat);
                 break;
 
@@ -386,11 +452,29 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
 
     }
+    public void recordThreeAxisDataCalibrated(String data, ArrayList<String> currentBuffer) {
+
+        if(isInCaliRecordingMode)
+            if(currentBuffer.size() <= dataCollectionLimit)
+                currentBuffer.add(data);
+            else if(currentBuffer.size() >= dataCollectionLimit & areAllBuffersAtLimit()) {
+                isInCaliRecordingMode = false;
+            }
+
+    }
     public void recordThreeAxisDataUncalibrated(String data) {
         if(isInUncaliRecordingMode)
             if(outputBuffer.size() <= dataCollectionLimit)
                 outputBuffer.add(data);
             else if(outputBuffer.size() >= dataCollectionLimit) {
+                isInUncaliRecordingMode = false;
+            }
+    }
+    public void recordThreeAxisDataUncalibrated(String data, ArrayList<String> currentBuffer) {
+        if(isInUncaliRecordingMode)
+            if(currentBuffer.size() <= dataCollectionLimit)
+                currentBuffer.add(data);
+            else if(currentBuffer.size() >= dataCollectionLimit & areAllBuffersAtLimit()) {
                 isInUncaliRecordingMode = false;
             }
     }
@@ -401,7 +485,40 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             else if(outputBuffer.size() >= dataCollectionLimit) {
                 isInCaliRecordingMode = false;
             }
+        else if(isInUncaliRecordingMode)
+            if(outputBuffer.size() <= dataCollectionLimit)
+                outputBuffer.add(data);
+            else if(outputBuffer.size() >= dataCollectionLimit) {
+                isInUncaliRecordingMode = false;
+            }
     }
+    public void recordOneAxisData(String data, ArrayList<String> currentBuffer) {
+            if(isInCaliRecordingMode)
+                if(currentBuffer.size() <= dataCollectionLimit)
+                    currentBuffer.add(data);
+                else if(currentBuffer.size() >= dataCollectionLimit & areAllBuffersAtLimit()) {
+                    isInCaliRecordingMode = false;
+                }
+            else if(isInUncaliRecordingMode)
+                if(currentBuffer.size() <= dataCollectionLimit)
+                    currentBuffer.add(data);
+                else if(currentBuffer.size() >= dataCollectionLimit & areAllBuffersAtLimit()) {
+                    isInUncaliRecordingMode = false;
+                }
+
+        }
+
+    public boolean areAllBuffersAtLimit() { //Application is a bit redundant, but still wanted.
+
+        if(gyroBuffer.size() >= dataCollectionLimit)
+            if(accelBuffer.size() >= dataCollectionLimit)
+                if(magnetoBuffer.size() >= dataCollectionLimit)
+                    if(lightBuffer.size() >= dataCollectionLimit | (lightBuffer.size() == 1 | accelBuffer.size() == 1))
+                        return true;
+        return false;
+
+    }
+
     /* Prevents app from using Sensor when not in foreground */
     @Override
     protected void onStop() {

@@ -202,7 +202,7 @@
     <RadioGroup
         android:id="@+id/sensorRadioGroup"
         android:layout_width="150dp"
-        android:layout_height="88dp"
+        android:layout_height="110dp"
         app:layout_constraintBottom_toTopOf="@+id/textView"
         app:layout_constraintEnd_toStartOf="@+id/sensor_list"
         app:layout_constraintHorizontal_bias="0.023"
@@ -231,6 +231,12 @@
             android:layout_width="match_parent"
             android:layout_height="22dp"
             android:text="Light" />
+
+        <RadioButton
+            android:id="@+id/radioOptionAll"
+            android:layout_width="match_parent"
+            android:layout_height="22dp"
+            android:text="All" />
 
     </RadioGroup>
 
