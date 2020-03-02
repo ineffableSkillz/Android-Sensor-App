@@ -9,15 +9,15 @@
 
     <TextView
         android:id="@+id/sensor_list"
-        android:layout_width="262dp"
-        android:layout_height="564dp"
+        android:layout_width="196dp"
+        android:layout_height="226dp"
         android:text="MY SENSORS"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_bias="0.033"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintVertical_bias="0.699" />
 
     <Button
         android:id="@+id/generate_button"
@@ -29,26 +29,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.921"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <TextView
-        android:id="@+id/gyro_readings_uncali"
-        android:layout_width="237dp"
-        android:layout_height="67dp"
-        android:layout_marginStart="232dp"
-        android:layout_marginBottom="176dp"
-        android:text="Uncalibrated Readings\nX\nY:\n\Z:"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <TextView
-        android:id="@+id/gyro_readings"
-        android:layout_width="238dp"
-        android:layout_height="65dp"
-        android:layout_marginStart="232dp"
-        android:layout_marginBottom="108dp"
-        android:text="Calibrated Readings\nX\nY:\nZ:"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
@@ -153,5 +133,56 @@
         android:text="Sampling Rate"
         app:layout_constraintBottom_toTopOf="@+id/sampleRateRadioGroup"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <LinearLayout
+        android:layout_width="212dp"
+        android:layout_height="425dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0">
+
+        <TextView
+            android:id="@+id/gyro_readings_uncali"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Uncalibrated Readings (Gyro)\nX\nY:\n\Z:" />
+
+        <TextView
+            android:id="@+id/accel_readings_uncali"
+            android:layout_width="212dp"
+            android:layout_height="67dp"
+            android:text="Uncalibrated Readings (Accel)\nX\nY:\n\Z:" />
+
+        <TextView
+            android:id="@+id/ambient_light_readings"
+            android:layout_width="match_parent"
+            android:layout_height="67dp"
+            android:text="Ambient Light Readings\nX\nY:\n\Z:" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="217dp"
+        android:layout_height="427dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0">
+
+        <TextView
+            android:id="@+id/gyro_readings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Calibrated Readings\nX\nY:\nZ:" />
+
+        <TextView
+            android:id="@+id/accel_readings"
+            android:layout_width="match_parent"
+            android:layout_height="67dp"
+            android:text="Calibrated Readings\nX\nY:\nZ:" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

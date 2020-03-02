@@ -9,6 +9,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -27,12 +28,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private SensorManager mSensorManager;
     private Sensor mSensorGyroUncali;
     private Sensor mSensorGyro;
+    private Sensor mSensorAccelUncali;
+    private Sensor mSensorAccel;
+    private Sensor mSensorAmbientLight;
     private Sensor mTemperatureSensor;
 
     /* Used to Display Values */
     private TextView mTextGyroSensorUncali;
     private TextView mTextGyroSensor;
     private TextView mTextTempSensor;
+    private TextView mTextAccelSensor;
+    private TextView mTextAccelSensorUncali;
+    private TextView mTextAmbientLight;
     private TextView sampleInfo;
     //private TextView isCheckedInfo;
 
@@ -79,8 +86,58 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         displayListOfSensors();
 
         /* Getting Gyro Values */
-        gyroStuff();
+        sensorSetup();
 
+    }
+
+    private void sensorSetup() {
+
+        /* Setting Text Field Output and Sensor */
+        mTextGyroSensorUncali = findViewById(R.id.gyro_readings_uncali);
+        mTextGyroSensor = findViewById(R.id.gyro_readings);
+        mTextTempSensor = findViewById(R.id.temperature_readings);
+        mTextAccelSensor = findViewById(R.id.accel_readings);
+        mTextAccelSensorUncali = findViewById(R.id.accel_readings_uncali);
+        mTextAmbientLight = findViewById(R.id.ambient_light_readings);
+
+        mSensorGyroUncali = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED);
+        mSensorGyro = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        mTemperatureSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
+        mSensorAccel = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mSensorAccelUncali = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED);
+        mSensorAmbientLight = mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+
+
+        sampleInfo = findViewById(R.id.sample_info);
+
+        /* Was Sensor Object Acquired Successfully? */
+        if(mSensorGyroUncali == null || mSensorGyro == null) {
+            mTextGyroSensorUncali.setText("NO GYROSCOPE");
+        }
+
+        if(mSensorAmbientLight == null)
+            mTextAmbientLight.setText("NO LIGHT SENSOR");
+        else
+            mTextAmbientLight.setText(mSensorAmbientLight.toString());
+
+        if(mSensorAccelUncali == null || mSensorAccel == null) {
+            mTextAccelSensorUncali.setText("No Accelerometer Uncali");
+            mTextAccelSensorUncali.setText("No Accelerometer Calibrated");
+        }
+
+        if(mTemperatureSensor == null) {
+            mTextTempSensor.setText("NO TEMPERATURE SENSOR");
+        }
+
+
+    }
+    private void changeSensitivity(int sensitivity) {
+        mSensorManager.unregisterListener(this);
+        mSensorManager.registerListener(this, mSensorGyroUncali, sensitivity);
+        mSensorManager.registerListener(this, mSensorGyro, sensitivity);
+        mSensorManager.registerListener(this, mSensorAccelUncali, sensitivity);
+        mSensorManager.registerListener(this, mSensorAccel, sensitivity);
+        mSensorManager.registerListener(this, mSensorAmbientLight, sensitivity);
     }
 
     private void setupRadioGroup() {
@@ -93,7 +150,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         radioGaming = findViewById(R.id.radioOptionGame);
         radioFastest = findViewById(R.id.radioOptionFastest);
     }
-
     private void setupSwitch() {
         collectCalibrated = findViewById(R.id.mode_switch);
 
@@ -153,40 +209,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         TextView sensorTextView = findViewById(R.id.sensor_list);
         sensorTextView.setText(sb);
-    }
-    private void gyroStuff() {
-
-        /* Setting Text Field Output and Sensor */
-        mTextGyroSensorUncali = findViewById(R.id.gyro_readings_uncali);
-        mTextGyroSensor = findViewById(R.id.gyro_readings);
-        mTextTempSensor = findViewById(R.id.temperature_readings);
-
-        mSensorGyroUncali = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED);
-        mSensorGyro = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        mTemperatureSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
-
-        sampleInfo = findViewById(R.id.sample_info);
-
-        /* Was Sensor Object Acquired Successfully? */
-        if(mSensorGyroUncali == null || mSensorGyro == null) {
-            mTextGyroSensorUncali.setText("NO GYROSCOPE");
-        } else {
-            mTextGyroSensorUncali.setText("Look at you all fancy with a gyroscope");
-        }
-
-        if(mTemperatureSensor == null) {
-            mTextTempSensor.setText("NO TEMPERATURE SENSOR");
-        } else {
-            mTextTempSensor.setText("Not as fancy as a gyroscope, but you know if I'm hot.");
-        }
-
-
-
-    }
-    private void changeSensitivity(int sensitivity) {
-        mSensorManager.unregisterListener(this);
-        mSensorManager.registerListener(this, mSensorGyroUncali, sensitivity);
-        mSensorManager.registerListener(this, mSensorGyro, sensitivity);
+        sensorTextView.setMovementMethod(new ScrollingMovementMethod());
     }
 
     /* We use onStart() to registers sensors instead of onCreate() as the latter would cause the
@@ -201,8 +224,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if(mSensorGyro != null)
             mSensorManager.registerListener(this, mSensorGyro, SensorManager.SENSOR_DELAY_NORMAL);
 
+        if(mSensorAccelUncali != null)
+            mSensorManager.registerListener(this, mSensorAccelUncali, SensorManager.SENSOR_DELAY_NORMAL);
+
+        if(mSensorAccel != null)
+            mSensorManager.registerListener(this, mSensorAccel, SensorManager.SENSOR_DELAY_NORMAL);
+
         if(mTemperatureSensor != null)
             mSensorManager.registerListener(this, mTemperatureSensor, SensorManager.SENSOR_DELAY_NORMAL);
+
+        //if(mTextAmbientLight != null)
+          //  mSensorManager.registerListener(this, mSensorAmbientLight, SensorManager.SENSOR_DELAY_NORMAL);
+
 
     }
 
@@ -230,7 +263,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         switch(sensorType) {
 
             case Sensor.TYPE_GYROSCOPE_UNCALIBRATED:
-                mTextGyroSensorUncali.setText("Uncalibrated:\n" + gyroData);
+                mTextGyroSensorUncali.setText("Uncalibrated Gyro:\n" + gyroData);
 
                 if(isInUncaliRecordingMode)
                     if(gyroOutputList.size() <= dataCollectionLimit)
@@ -238,12 +271,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     else if(gyroOutputList.size() >= dataCollectionLimit) {
                         isInUncaliRecordingMode = false;
                     }
-
-
-
                 break;
             case Sensor.TYPE_GYROSCOPE:
-                mTextGyroSensor.setText("Calibrated:\n" + gyroData);
+                mTextGyroSensor.setText("Calibrated Gryo:\n" + gyroData);
 
                 if(isInCaliRecordingMode)
                     if(gyroOutputList.size() <= dataCollectionLimit)
@@ -251,8 +281,40 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     else if(gyroOutputList.size() >= dataCollectionLimit) {
                         isInCaliRecordingMode = false;
                     }
+                break;
+            case Sensor.TYPE_ACCELEROMETER:
+                mTextAccelSensor.setText("Calibrated Accelerometer:\n" + gyroData);
+
+                if(isInCaliRecordingMode)
+                    if(gyroOutputList.size() <= dataCollectionLimit)
+                        gyroOutputList.add(value1 + "\t" + value2 + "\t" + value3 + "\n");
+                    else if(gyroOutputList.size() >= dataCollectionLimit) {
+                        isInCaliRecordingMode = false;
+                    }
+                break;
+            case Sensor.TYPE_ACCELEROMETER_UNCALIBRATED:
+                mTextAccelSensorUncali.setText("Uncalibrated Accelerometer:\n" + gyroData);
+
+                if(isInCaliRecordingMode)
+                    if(gyroOutputList.size() <= dataCollectionLimit)
+                        gyroOutputList.add(value1 + "\t" + value2 + "\t" + value3 + "\n");
+                    else if(gyroOutputList.size() >= dataCollectionLimit) {
+                        isInCaliRecordingMode = false;
+                    }
+                break;
+
+            case Sensor.TYPE_LIGHT:
+                mTextAmbientLight.setText("Light Sensor:\n" + value1 + "C");
+                if(isInCaliRecordingMode)
+                    if(gyroOutputList.size() <= dataCollectionLimit)
+                        gyroOutputList.add(value1 + "\n");
+                    else if(gyroOutputList.size() >= dataCollectionLimit) {
+                        isInCaliRecordingMode = false;
+                    }
 
                 break;
+
+
             case Sensor.TYPE_AMBIENT_TEMPERATURE:
                 mTextTempSensor.setText(String.valueOf(value1));
                 break;
