@@ -183,6 +183,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mSensorManager.registerListener(this, mSensorMagneto, sensitivity);
         mSensorManager.registerListener(this, mSensorMagnetoUncali, sensitivity);
     }
+    private void unregisterListeners() {
+        mSensorManager.unregisterListener(this);
+    }
+    private void registerListeners() {
+        mSensorManager.registerListener(this, mSensorGyroUncali, mSensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(this, mSensorGyro, mSensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(this, mSensorAccelUncali, mSensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(this, mSensorAccel, mSensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(this, mSensorLight, mSensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(this, mSensorMagneto, mSensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(this, mSensorMagnetoUncali, mSensorManager.SENSOR_DELAY_NORMAL);
+    }
 
     /* Button Functions */
     private void setupAllButtons() {
@@ -223,13 +235,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 /* Reset Buffers */
                 outputBuffer = new ArrayList<>();
                 gyroBuffer = new ArrayList<>();
-                gyroBuffer.add("--------------- GYRO VALUES ------------");
+                gyroBuffer.add("--------------- GYRO VALUES ------------\n");
                 accelBuffer = new ArrayList<>();
-                accelBuffer.add("--------------- ACCEL VALUES ------------");
+                accelBuffer.add("--------------- ACCEL VALUES ------------\n");
                 magnetoBuffer = new ArrayList<>();
-                magnetoBuffer.add("--------------- MAGNETO VALUES ------------");
+                magnetoBuffer.add("--------------- MAGNETO VALUES ------------\n");
                 lightBuffer = new ArrayList<>();
-                lightBuffer.add("--------------- LIGHT VALUES ------------");
+                lightBuffer.add("--------------- LIGHT VALUES ------------\n");
 
                 /* Obtain New Data Collection Goal */
                 dataCollectionLimit = Integer.parseInt(mEdit.getText().toString());
@@ -297,19 +309,51 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 isInCaliRecordingMode = false;
 
                 if(isRecordingAll) {
-                    outputBuffer.add(gyroBuffer.toString());
-                    outputBuffer.add(accelBuffer.toString());
-                    outputBuffer.add(magnetoBuffer.toString());
-                    outputBuffer.add(lightBuffer.toString());
+
+                    outputBuffer = new ArrayList<>();
+
+                    outputBuffer.addAll(gyroBuffer);
+                    outputBuffer.addAll(accelBuffer);
+                    outputBuffer.addAll(magnetoBuffer);
+                    outputBuffer.addAll(lightBuffer);
+
+                    int absoluteLimit = outputBuffer.size();
+                    int transferLimit = 1500;
+                    int noRounds = (absoluteLimit/transferLimit) + 1;
+
+
+                    /* Android transfer limit == 1500 lines */
+                    for(int multiplier = 1; multiplier <= noRounds; multiplier ++) {
+                        StringBuilder sb = new StringBuilder();
+
+                        /* Filling Up Current Transfer Array */
+                        for(int pos = transferLimit * (multiplier-1); (pos < (transferLimit * multiplier)) & (pos < absoluteLimit); pos++)
+                            sb.append(outputBuffer.get(pos));
+
+                        System.out.println("OutputBuffer Size: " + outputBuffer.size());
+                        System.out.println(sb.length());
+
+                        Intent sendIntent = new Intent();
+                        sendIntent.setAction(Intent.ACTION_SEND);
+                        sendIntent.putExtra(Intent.EXTRA_TEXT, sb.toString().replaceAll(", ", "").replaceAll("\\[|\\]", ""));
+                        sendIntent.setType("text/plain");
+
+                        Intent shareIntent = Intent.createChooser(sendIntent, null);
+                        startActivity(shareIntent);
+                    }
+
+                } else {
+
+                    Intent sendIntent = new Intent();
+                    sendIntent.setAction(Intent.ACTION_SEND);
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, outputBuffer.toString().replaceAll(", ", "").replaceAll("\\[|\\]", ""));
+                    sendIntent.setType("text/plain");
+
+                    Intent shareIntent = Intent.createChooser(sendIntent, null);
+                    startActivity(shareIntent);
 
                 }
-                Intent sendIntent = new Intent();
-                sendIntent.setAction(Intent.ACTION_SEND);
-                sendIntent.putExtra(Intent.EXTRA_TEXT, outputBuffer.toString().replaceAll(", ", "").replaceAll("\\[|\\]", ""));
-                sendIntent.setType("text/plain");
 
-                Intent shareIntent = Intent.createChooser(sendIntent, null);
-                startActivity(shareIntent);
 
 
             }
@@ -351,14 +395,26 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public void onSensorChanged(SensorEvent event) {
 
+        int sensorType = event.sensor.getType();
+
         /* Acquiring Individual Axis Values */
         BigDecimal value1 = BigDecimal.valueOf(event.values[0]);
-        BigDecimal value2 = BigDecimal.valueOf(event.values[1]);
-        BigDecimal value3 = BigDecimal.valueOf(event.values[2]);
+        BigDecimal value2 = null;
+        BigDecimal value3 = null;
+        String threeAxisData = "";
+        String threeAxisRecordingDataFormat = "";
 
+
+        if(sensorType != Sensor.TYPE_LIGHT) {
+            value2 = BigDecimal.valueOf(event.values[1]);
+            value3 = BigDecimal.valueOf(event.values[2]);
+            threeAxisData = "X: " + value1 + "\nY: " + value2 + "\nZ: " + value3;
+            threeAxisRecordingDataFormat = value1 + "\t" + value2 + "\t" + value3 + "\n";
+
+
+        }
         /* Composing Relevant Strings */
-        String threeAxisData = "X: " + value1 + "\nY: " + value2 + "\nZ: " + value3;
-        String threeAxisRecordingDataFormat = value1 + "\t" + value2 + "\t" + value3 + "\n";
+
         String oneAxisRecordingDataFormat = value1 + "\n";
 
         if(!isRecordingAll)
@@ -369,7 +425,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
 
         /* Handling Multiple Sensors */
-        int sensorType = event.sensor.getType();
+
         switch(sensorType) {
 
                                         /* Calibrated */
