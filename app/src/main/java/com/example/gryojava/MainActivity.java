@@ -344,9 +344,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     isRecordingAll = true;
                 }
 
-
-
-
             }
         });
     }
@@ -355,10 +352,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         generateButton.setOnClickListener(new View.OnClickListener(){
             public void onClick(View v) { //Operates on Main Thread
 
-                isInUncaliRecordingMode = false;
-                isInCaliRecordingMode = false;
-
                 if(isRecordingAll) {
+
+                    isInUncaliRecordingMode = false;
+                    isInCaliRecordingMode = false;
 
                     outputBuffer = new ArrayList<>();
 
@@ -366,48 +363,35 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     outputBuffer.addAll(accelBuffer);
                     outputBuffer.addAll(magnetoBuffer);
                     outputBuffer.addAll(lightBuffer);
-
-                    int absoluteLimit = outputBuffer.size();
-                    int transferLimit = 1500;
-                    int noRounds = (absoluteLimit/transferLimit) + 1;
+                }
 
 
-                    /* Android transfer limit == 1500 lines */
-                    for(int multiplier = 1; multiplier <= noRounds; multiplier ++) {
-                        StringBuilder sb = new StringBuilder();
+                int absoluteLimit = outputBuffer.size();
+                int transferLimit = 1500;
+                int noRounds = (absoluteLimit/transferLimit) + 1;
 
-                        /* Filling Up Current Transfer Array */
-                        for(int pos = transferLimit * (multiplier-1); (pos < (transferLimit * multiplier)) & (pos < absoluteLimit); pos++)
-                            sb.append(outputBuffer.get(pos));
 
-                        Intent sendIntent = new Intent();
-                        sendIntent.setAction(Intent.ACTION_SENDTO);
-                        sendIntent.putExtra(Intent.EXTRA_TEXT, sb.toString().replaceAll(", ", "").replaceAll("\\[|\\]", ""));
-                        sendIntent.setType("text/plain");
-                        sendIntent.setData(Uri.parse("mailto:d.s.a.gray2@newcastle.ac.uk"));
-                        sendIntent.putExtra(sendIntent.EXTRA_SUBJECT, buildSubject(multiplier));
+                /* Android transfer limit == 1500 lines */
+                for(int multiplier = 1; multiplier <= noRounds; multiplier ++) {
+                    StringBuilder sb = new StringBuilder();
 
-                        Intent shareIntent = Intent.createChooser(sendIntent, null);
-                        startActivity(shareIntent);
-                    }
-
-                } else {
+                    /* Filling Up Current Transfer Array */
+                    for(int pos = transferLimit * (multiplier-1); (pos < (transferLimit * multiplier)) & (pos < absoluteLimit); pos++)
+                        sb.append(outputBuffer.get(pos));
 
                     Intent sendIntent = new Intent();
-                    sendIntent.setAction(Intent.ACTION_SEND);
-                    sendIntent.putExtra(Intent.EXTRA_TEXT, outputBuffer.toString().replaceAll(", ", "").replaceAll("\\[|\\]", ""));
+                    sendIntent.setAction(Intent.ACTION_SENDTO);
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, sb.toString().replaceAll(", ", "").replaceAll("\\[|\\]", ""));
                     sendIntent.setType("text/plain");
                     sendIntent.setData(Uri.parse("mailto:d.s.a.gray2@newcastle.ac.uk"));
+                    sendIntent.putExtra(sendIntent.EXTRA_SUBJECT, buildSubject(multiplier));
 
                     Intent shareIntent = Intent.createChooser(sendIntent, null);
                     startActivity(shareIntent);
 
                 }
 
-
-
-            }
-        });
+        }});
     }
     private String buildSubject(int currentInstance) {
 
@@ -430,6 +414,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             returnValue += "CALI ";
         else
             returnValue += "UNCALI ";
+
+        if(radioNormal.isChecked())
+            returnValue += "N ";
+        else if(radioUI.isChecked())
+            returnValue += "UI ";
+        else if(radioGaming.isChecked())
+            returnValue += "GAMING ";
+        else if(radioFastest.isChecked())
+            returnValue += "FAST ";
 
         if(collectSingleListener.isChecked() & !isRecordingAll)
             returnValue += "EXCL ";
