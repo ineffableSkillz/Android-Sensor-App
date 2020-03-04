@@ -259,4 +259,14 @@
         app:layout_constraintBottom_toTopOf="@+id/sensor_list"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <Switch
+        android:id="@+id/exclusiveListenerSwitch"
+        android:layout_width="178dp"
+        android:layout_height="18dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="16dp"
+        android:text="Solo Listener"
+        app:layout_constraintBottom_toTopOf="@+id/mode_switch"
+        app:layout_constraintEnd_toEndOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

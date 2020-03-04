@@ -8,6 +8,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.view.View;
@@ -18,6 +20,7 @@ import android.widget.RadioGroup;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -72,6 +75,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     /* Buttons */
     private Button generateButton;
     private Switch collectCalibrated;
+    private Switch collectSingleListener;
         /* Sample Rate Radio Group */
     private RadioGroup sampleRateRadioGroup;
     private RadioButton radioNormal;
@@ -111,8 +115,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     /* Text Functions */
     private void collectionLimitInputSetup() {
         mEdit = findViewById((R.id.number_field));
-        mEdit.setText("500");
-        dataCollectionLimit = 500;
+        mEdit.setText("1500");
+        dataCollectionLimit = 1500;
     }
 
     /* Sensor Functions */
@@ -195,6 +199,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mSensorManager.registerListener(this, mSensorMagneto, mSensorManager.SENSOR_DELAY_NORMAL);
         mSensorManager.registerListener(this, mSensorMagnetoUncali, mSensorManager.SENSOR_DELAY_NORMAL);
     }
+    private void registerSpecificListener(Sensor sensor) {
+
+        mSensorManager.unregisterListener(this);
+
+        if(radioFastest.isChecked())
+            mSensorManager.registerListener(this, sensor,SensorManager.SENSOR_DELAY_FASTEST);
+        else if(radioGaming.isChecked())
+            mSensorManager.registerListener(this, sensor,SensorManager.SENSOR_DELAY_GAME);
+        else if(radioUI.isChecked())
+            mSensorManager.registerListener(this, sensor,SensorManager.SENSOR_DELAY_UI);
+        else
+            mSensorManager.registerListener(this, sensor,SensorManager.SENSOR_DELAY_NORMAL);
+
+
+    }
+
 
     /* Button Functions */
     private void setupAllButtons() {
@@ -225,7 +245,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
     private void setupSwitch() {
         collectCalibrated = findViewById(R.id.mode_switch);
-
+        collectSingleListener = findViewById(R.id.exclusiveListenerSwitch);
     }
     private void setupGenerateButton() {
         generateButton = findViewById(R.id.generate_button);
@@ -235,13 +255,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 /* Reset Buffers */
                 outputBuffer = new ArrayList<>();
                 gyroBuffer = new ArrayList<>();
-                gyroBuffer.add("--------------- GYRO VALUES ------------\n");
+                gyroBuffer.add(">>GYRO VALUES\n");
                 accelBuffer = new ArrayList<>();
-                accelBuffer.add("--------------- ACCEL VALUES ------------\n");
+                accelBuffer.add(">>ACCEL VALUES\n");
                 magnetoBuffer = new ArrayList<>();
-                magnetoBuffer.add("--------------- MAGNETO VALUES ------------\n");
+                magnetoBuffer.add(">>MAGNETO VALUES\n");
                 lightBuffer = new ArrayList<>();
-                lightBuffer.add("--------------- LIGHT VALUES ------------\n");
+                lightBuffer.add(">>LIGHT VALUES\n");
 
                 /* Obtain New Data Collection Goal */
                 dataCollectionLimit = Integer.parseInt(mEdit.getText().toString());
@@ -257,6 +277,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 else
                     changeSensitivity(SensorManager.SENSOR_DELAY_NORMAL);
 
+                if(collectCalibrated.isChecked()) {
+                    isInCaliRecordingMode = true;
+                    isInUncaliRecordingMode = false;
+                } else {
+                    isInCaliRecordingMode = false;
+                    isInUncaliRecordingMode = true;
+                }
+
                 /* Sensor Radio */
                 if(radioGyro.isChecked()) {
                     isRecordingGyro = true;
@@ -264,24 +292,50 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     isRecordingMagneto = false;
                     isRecordingLight = false;
                     isRecordingAll = false;
+
+                    if(collectSingleListener.isChecked())
+                        if(isInCaliRecordingMode)
+                            registerSpecificListener(mSensorGyro);
+                        else if (isInUncaliRecordingMode)
+                            registerSpecificListener(mSensorGyroUncali);
+
                 } else if(radioAccel.isChecked()) {
                     isRecordingGyro = false;
                     isRecordingAccel = true;
                     isRecordingMagneto = false;
                     isRecordingLight = false;
                     isRecordingAll = false;
+
+                    if(collectSingleListener.isChecked())
+                        if(isInCaliRecordingMode)
+                            registerSpecificListener(mSensorAccel);
+                        else if (isInUncaliRecordingMode)
+                            registerSpecificListener(mSensorAccelUncali);
+
                 } else if(radioMagneto.isChecked()) {
                     isRecordingGyro = false;
                     isRecordingAccel = false;
                     isRecordingMagneto = true;
                     isRecordingLight = false;
                     isRecordingAll = false;
+
+                    if(collectSingleListener.isChecked())
+                        if(isInCaliRecordingMode)
+                            registerSpecificListener(mSensorMagneto);
+                        else if (isInUncaliRecordingMode)
+                            registerSpecificListener(mSensorMagnetoUncali);
+
                 } else if(radioLight.isChecked()){
                     isRecordingGyro = false;
                     isRecordingAccel = false;
                     isRecordingMagneto = false;
                     isRecordingLight = true;
                     isRecordingAll = false;
+
+                    if(collectSingleListener.isChecked())
+                            registerSpecificListener(mSensorLight);
+
+
                 } else if(radioAll.isChecked()) {
                     isRecordingGyro = false;
                     isRecordingAccel = false;
@@ -290,13 +344,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     isRecordingAll = true;
                 }
 
-                if(collectCalibrated.isChecked()) {
-                    isInCaliRecordingMode = true;
-                    isInUncaliRecordingMode = false;
-                } else {
-                    isInCaliRecordingMode = false;
-                    isInUncaliRecordingMode = true;
-                }
+
+
+
             }
         });
     }
@@ -330,13 +380,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         for(int pos = transferLimit * (multiplier-1); (pos < (transferLimit * multiplier)) & (pos < absoluteLimit); pos++)
                             sb.append(outputBuffer.get(pos));
 
-                        System.out.println("OutputBuffer Size: " + outputBuffer.size());
-                        System.out.println(sb.length());
-
                         Intent sendIntent = new Intent();
-                        sendIntent.setAction(Intent.ACTION_SEND);
+                        sendIntent.setAction(Intent.ACTION_SENDTO);
                         sendIntent.putExtra(Intent.EXTRA_TEXT, sb.toString().replaceAll(", ", "").replaceAll("\\[|\\]", ""));
                         sendIntent.setType("text/plain");
+                        sendIntent.setData(Uri.parse("mailto:d.s.a.gray2@newcastle.ac.uk"));
+                        sendIntent.putExtra(sendIntent.EXTRA_SUBJECT, buildSubject(multiplier));
 
                         Intent shareIntent = Intent.createChooser(sendIntent, null);
                         startActivity(shareIntent);
@@ -348,6 +397,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     sendIntent.setAction(Intent.ACTION_SEND);
                     sendIntent.putExtra(Intent.EXTRA_TEXT, outputBuffer.toString().replaceAll(", ", "").replaceAll("\\[|\\]", ""));
                     sendIntent.setType("text/plain");
+                    sendIntent.setData(Uri.parse("mailto:d.s.a.gray2@newcastle.ac.uk"));
 
                     Intent shareIntent = Intent.createChooser(sendIntent, null);
                     startActivity(shareIntent);
@@ -359,6 +409,39 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         });
     }
+    private String buildSubject(int currentInstance) {
+
+        String returnValue = "";
+
+        returnValue += Build.MODEL + " ";
+
+        if(isRecordingAll)
+            returnValue += "ALL ";
+        else if(isRecordingLight)
+            returnValue += "LIGHT ";
+        else if(isRecordingMagneto)
+            returnValue += "MAG ";
+        else if(isRecordingAccel)
+            returnValue += "ACCEL ";
+        else if(isRecordingGyro)
+            returnValue += "GYRO ";
+
+        if(collectCalibrated.isChecked())
+            returnValue += "CALI ";
+        else
+            returnValue += "UNCALI ";
+
+        if(collectSingleListener.isChecked() & !isRecordingAll)
+            returnValue += "EXCL ";
+        else
+            returnValue += "UNEXCL ";
+
+        returnValue += String.valueOf(currentInstance);
+
+        return returnValue;
+
+    }
+
 
     /* We use onStart() to registers sensors instead of onCreate() as the latter would cause the
     *  sensors to be sensing data and using power even with the app in the background */
